@@ -134,6 +134,7 @@ static int gpio_s3c24xx_remove(struct platform_device *pdev)
 		return ret;
 	}
 
+	kfree(s3c24xx_gpiochip[pdata->base/16]);
 	printk(KERN_INFO "s3c24xx gpio platform device %s unbind succeeded.", pdata->name);
 	return ret;
 }
