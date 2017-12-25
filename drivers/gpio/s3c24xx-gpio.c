@@ -4,6 +4,7 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/io.h>
+#include <mach/irqs.h>
 #include <asm/gpio.h>
 #include <plat/map.h>
 #include <plat/s3c24xx_gpio.h>
@@ -115,10 +116,34 @@ static void gpio_s3c24xx_set(struct gpio_chip *chip, unsigned offset, int value)
 #endif
 }
 
+static int gpio_s3c24xx_to_irq(struct gpio_chip *chip, unsigned offset){
+  printk("s3c24xx-gpio: to_irq entered. offset %d\n", offset);
+
+  switch(offset){
+  case 0:
+  case 1:
+  case 2:
+  case 3:
+    printk("s3c24xx-gpio: irq %d\n", offset + IRQ_EINT0);
+    return (IRQ_EINT0 + offset);
+  case 4:
+  case 5:
+  case 6:
+  case 7:
+    printk("s3c24xx-gpio: irq %d\n", IRQ_EINT4 + offset - 4);
+    return (IRQ_EINT4 + offset - 4);
+  default:
+    printk("s3c24xx-gpio: irq number error.");
+    return -EINVAL;
+  }
+}
+
 static int gpio_s3c24xx_get(struct gpio_chip *chip, unsigned offset)
 {
 	return (__raw_readl(S3C24XX_GPXDAT) & (0x1 << offset));
 }
+
+
 
 /* gpio_chips for GPA...GPJ. */
 static struct gpio_chip *s3c24xx_gpiochip[9];
@@ -156,6 +181,7 @@ static int __devinit gpio_s3c24xx_probe(struct platform_device *pdev)
 	s3c24xx_gpiochip[pdata->base/16]->direction_output 	= gpio_s3c24xx_direction_output;
 	s3c24xx_gpiochip[pdata->base/16]->get 				= gpio_s3c24xx_get;
 	s3c24xx_gpiochip[pdata->base/16]->set 				= gpio_s3c24xx_set;
+	s3c24xx_gpiochip[pdata->base/16]->to_irq                        = gpio_s3c24xx_to_irq;
 	s3c24xx_gpiochip[pdata->base/16]->can_sleep 		= 0;
 
 	ret = gpiochip_add(s3c24xx_gpiochip[pdata->base/16]);
